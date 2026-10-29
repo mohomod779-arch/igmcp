@@ -1,0 +1,30 @@
+# No host port is published: reachable only as http://instagram-mcp:8000/mcp on ai-network.
+# No mem_limit by user decision (container limits were rejected).
+services:
+  instagram-mcp:
+    build: .
+    image: instagram-mcp:0.1.0
+    container_name: instagram-mcp
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: ["/tmp"]
+    environment:
+      INSTAGRAM_ACCOUNT_ID: "${INSTAGRAM_ACCOUNT_ID:?set in .env}"
+      GRAPH_VERSION: "${GRAPH_VERSION:-v21.0}"
+      IG_GRAPH_TOKEN_FILE: /run/secrets/ig_graph_token
+      MCP_AUTH_TOKEN_FILE: /run/secrets/mcp_auth_token
+    secrets: [ig_graph_token, mcp_auth_token]
+    networks: [ai-network]
+
+secrets:
+  ig_graph_token:
+    file: ./secrets/ig_graph_token
+  mcp_auth_token:
+    file: ./secrets/mcp_auth_token
+
+networks:
+  ai-network:
+    external: true
+    name: ${AI_NETWORK:-ai-network}
